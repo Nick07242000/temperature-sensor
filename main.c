@@ -10,8 +10,11 @@ void configPINS();
 void configADC();
 void configTMR();
 void configUART();
+void setLED(uint8_t value);
 
 uint8_t TMR_INTER_COUNT = 0;
+uint8_t UART_INTER_COUNT = 0;
+uint32_t ADC_VALUE;
 
 int main()
 {
@@ -42,7 +45,7 @@ void configPINS()
     cfg.Pinmode = PINSEL_PINMODE_PULLUP;
     cfg.OpenDrain = PINSEL_PINMODE_NORMAL;
 
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 14; i++)
     {
         cfg.Pinnum = i;
         PINSEL_ConfigPin(*cfg);
@@ -117,7 +120,7 @@ void TIMER0_IRQHandler()
 
     if (TMR_INTER_COUNT == 128)
     {
-        // send uart data
+        UART_Send(LPC_UART0, ADC_VALUE, sizeof(ADC_VALUE), NONE_BLOCKING);
     }
 
     return;
@@ -125,21 +128,60 @@ void TIMER0_IRQHandler()
 
 void ADC_IRQHandler(void)
 {
-    uint32_t value = ADC_ChannelGetData(LPC_ADC, _ADC_CHANNEL);
-    UART_Send(LPC_UART0, value, sizeof(value), NONE_BLOCKING);
+    ADC_VALUE = ADC_ChannelGetData(LPC_ADC, ADC_CHANNEL_0);
 }
 
 void UART2_IRQHandler()
 {
-    uint32_t intsrc, tmp;
+    uint8_t value = UART_ReceiveByte(LPC_UART0);
 
-    // Inter source
-    intsrc = UART_GetIntId(LPC_UART0);
-    tmp = intsrc & UART_IIR_INTID_MASK;
-
-    if (tmp == UART_IIR_INTID_RBR)
+    if (value == 255)
     {
-        // read data
+        UART_INTER_COUNT = 0;
+        return;
+    }
+
+    switch (UART_INTER_COUNT)
+    {
+    case 0:
+        setLED(value);
+        break;
+    case 1:
+        break;
+    case 2:
+        break;
+    case 3:
+        break;
+    default:
+        break;
+    }
+
+    UART_INTER_COUNT++;
+
+    return;
+}
+
+void setLED(uint8_t value)
+{
+    switch (value)
+    {
+    case 1:
+        LPC_GPIO0->FIOSET |= (1 << 11);
+        LPC_GPIO0->FIOCLR |= (1 << 12);
+        LPC_GPIO0->FIOCLR |= (1 << 13);
+        break;
+    case 2:
+        LPC_GPIO0->FIOCLR |= (1 << 11);
+        LPC_GPIO0->FIOSET |= (1 << 12);
+        LPC_GPIO0->FIOCLR |= (1 << 13);
+        break;
+    case 4:
+        LPC_GPIO0->FIOCLR |= (1 << 11);
+        LPC_GPIO0->FIOCLR |= (1 << 12);
+        LPC_GPIO0->FIOSET |= (1 << 13);
+        break;
+    default:
+        break;
     }
 
     return;
