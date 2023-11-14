@@ -120,6 +120,8 @@ void configUART()
     UART_TxCmd(LPC_UART0, ENABLE);
     UART_IntConfig(LPC_UART0, UART_INTCFG_RBR, ENABLE);
 
+    NVIC_EnableIRQ(UART0_IRQn);
+
     return;
 }
 
