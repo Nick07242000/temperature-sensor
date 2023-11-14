@@ -60,8 +60,14 @@ void configPINS()
         PINSEL_ConfigPin(*cfg);
     }
 
-    cfg.Pinnum = PINSEL_PIN_23;
     cfg.Funcnum = PINSEL_FUNC_1;
+
+    cfg.Pinnum = PINSEL_PIN_2;
+    PINSEL_ConfigPin(*cfg);
+    cfg.Pinnum = PINSEL_PIN_3;
+    PINSEL_ConfigPin(*cfg);
+
+    cfg.Pinnum = PINSEL_PIN_23;
     cfg.Pinmode = PINSEL_PINMODE_TRISTATE;
     PINSEL_ConfigPin(*cfg);
 }
@@ -188,19 +194,19 @@ void switchActiveDisplay()
         LPC_GPIO0->FIOCLR |= (1 << 9);
         LPC_GPIO0->FIOSET |= (1 << 8);
         LPC_GPIO0->FIOCLR |= (1 << 7);
-        setDisplayValue(2);
+        setDisplayValue(1);
         break;
     case 1: // Enables third display
         LPC_GPIO0->FIOCLR |= (1 << 9);
         LPC_GPIO0->FIOCLR |= (1 << 8);
         LPC_GPIO0->FIOSET |= (1 << 7);
-        setDisplayValue(3);
+        setDisplayValue(2);
         break;
     case 2: // Enables first display
         LPC_GPIO0->FIOSET |= (1 << 9);
         LPC_GPIO0->FIOCLR |= (1 << 8);
         LPC_GPIO0->FIOCLR |= (1 << 7);
-        setDisplayValue(1);
+        setDisplayValue(0);
         break;
     default:
         break;
