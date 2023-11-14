@@ -13,7 +13,7 @@ void configUART();
 void switchActiveDisplay();
 void setLED(uint8_t value);
 void setDisplayValue(uint8_t display);
-uint8_t loadSevenSegValue(uint8_t value, uint8_t display);
+void loadSevenSegValue(uint8_t value, uint8_t display);
 
 uint8_t TMR_INTER_COUNT = 0;
 uint8_t UART_INTER_COUNT = 0;
@@ -242,7 +242,7 @@ void setLED(uint8_t value)
     return;
 }
 
-uint8_t loadSevenSegValue(uint8_t value, uint8_t display) // Segments enabled by low
+void loadSevenSegValue(uint8_t value, uint8_t display) // Segments enabled by low
 {
     switch (value)
     {
