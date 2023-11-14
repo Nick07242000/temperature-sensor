@@ -12,6 +12,9 @@ void configTMR();
 void configUART();
 void switchActiveDisplay();
 void setLED(uint8_t value);
+void setDisplayValue(uint8_t display, uint8_t value);
+uint8_t getSevenSegSetValue(uint8_t value);
+uint8_t getSevenSegClearValue(uint8_t value);
 
 uint8_t TMR_INTER_COUNT = 0;
 uint8_t UART_INTER_COUNT = 0;
@@ -151,6 +154,8 @@ void UART2_IRQHandler()
 
     switch (UART_INTER_COUNT)
     {
+    case 4: // Resets counter and executes case 0
+        UART_INTER_COUNT = 0;
     case 0:
         setLED(value);
         break;
@@ -165,7 +170,6 @@ void UART2_IRQHandler()
     }
 
     UART_INTER_COUNT++;
-
     return;
 }
 
@@ -222,4 +226,80 @@ void setLED(uint8_t value)
     }
 
     return;
+}
+
+void setDisplayValue(uint8_t display, uint8_t value)
+{
+    uint8_t setVal = getSevenSegSetValue(value);
+    uint8_t clrVal = getSevenSegClearValue(value);
+
+    switch (display)
+    {
+    case 0:
+        break;
+    case 1:
+        break;
+    case 2:
+        break;
+    default:
+        break;
+    }
+}
+
+uint8_t getSevenSegSetValue(uint8_t value)
+{
+    switch (value)
+    {
+    case 0:
+        return 0b00000011;
+    case 1:
+        return 0b10011111;
+    case 2:
+        return 0b00100101;
+    case 3:
+        return 0b00001101;
+    case 4:
+        return 0b10011001;
+    case 5:
+        return 0b01001001;
+    case 6:
+        return 0b01000001;
+    case 7:
+        return 0b00011111;
+    case 8:
+        return 0b00000001;
+    case 9:
+        return 0b00001001;
+    default:
+        return;
+    }
+}
+
+uint8_t getSevenSegClearValue(uint8_t value)
+{
+    switch (value)
+    {
+    case 0:
+        return 0b11111100;
+    case 1:
+        return 0b01100000;
+    case 2:
+        return 0b11011010;
+    case 3:
+        return 0b11110010;
+    case 4:
+        return 0b01100110;
+    case 5:
+        return 0b10110110;
+    case 6:
+        return 0b10111110;
+    case 7:
+        return 0b11100000;
+    case 8:
+        return 0b11111110;
+    case 9:
+        return 0b11110110;
+    default:
+        return;
+    }
 }
