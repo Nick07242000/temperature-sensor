@@ -21,17 +21,13 @@ uint8_t ENABLED_SEVEN_SEG = 0;
 
 uint32_t ADC_VALUE;
 
-uin32_t SEVEN_SEG_SET_VALS[3] = [ 50823168, 1124564992, 50823168 ]; // all displays 0 by defauly
-uin32_t SEVEN_SEG_CLR_VALS[3] = [ 67108864, 67108864, 67108864 ];   // displays ordered as 1, 2, 3
+uin32_t SEVEN_SEG_ON_VALS[3] = [ 50823168, 1124564992, 50823168 ]; // all displays 0 by defauly
+uin32_t SEVEN_SEG_OFF_VALS[3] = [ 67108864, 67108864, 67108864 ];  // displays ordered as 1, 2, 3
 
 int main()
 {
     configPRIO();
     configPINS();
-
-    LPC_GPIO0->FIOSET |= 255;      // Sets all pins to high by default
-    LPC_GPIO0->FIOSET |= (1 << 8); // Enables first display
-
     configADC();
     configTMR();
     configUART();
@@ -41,11 +37,11 @@ int main()
     }
 }
 
-void configPRIO() // TODO: Fix prio numbers
+void configPRIO()
 {
-    NVIC_SetPriority(UART0_IRQn, 9);
-    NVIC_SetPriority(ADC_IRQn, 9);
-    NVIC_SetPriority(TMR0_IRQn, 9);
+    NVIC_SetPriority(UART0_IRQn, 0);
+    NVIC_SetPriority(ADC_IRQn, 1);
+    NVIC_SetPriority(TMR0_IRQn, 2);
 }
 
 void configPINS()
@@ -216,8 +212,8 @@ void switchActiveDisplay()
 
 void setDisplayValue(uint8_t display)
 {
-    LPC_GPIO0->FIOSET |= SEVEN_SEG_SET_VALS[display];
-    LPC_GPIO0->FIOCLR |= SEVEN_SEG_CLR_VALS[display];
+    LPC_GPIO0->FIOCLR |= SEVEN_SEG_ON_VALS[display];
+    LPC_GPIO0->FIOSET |= SEVEN_SEG_OFF_VALS[display];
 }
 
 void setLED(uint8_t value)
@@ -246,49 +242,49 @@ void setLED(uint8_t value)
     return;
 }
 
-uint8_t loadSevenSegValue(uint8_t value, uint8_t display)
+uint8_t loadSevenSegValue(uint8_t value, uint8_t display) // Segments enabled by low
 {
     switch (value)
     {
     case 0:
-        SEVEN_SEG_SET_VALS[display] = 50823168; // Enables segments A,B,C,D,E,F
-        SEVEN_SEG_CLR_VALS[display] = 67108864; // Disables segments G
+        SEVEN_SEG_ON_VALS[display] = 50823168;  // Enables segments A,B,C,D,E,F
+        SEVEN_SEG_OFF_VALS[display] = 67108864; // Disables segments G
         break;
     case 1:
-        SEVEN_SEG_SET_VALS[display] = 163840;    // Enables segments B,C
-        SEVEN_SEG_CLR_VALS[display] = 184844288; // Disables segments A,D,E,F,G
+        SEVEN_SEG_ON_VALS[display] = 163840;     // Enables segments B,C
+        SEVEN_SEG_OFF_VALS[display] = 184844288; // Disables segments A,D,E,F,G
         break;
     case 2:
-        SEVEN_SEG_SET_VALS[display] = 84344832; // Enables segments A,B,D,E,G
-        SEVEN_SEG_CLR_VALS[display] = 33554432; // Disables segments F
+        SEVEN_SEG_ON_VALS[display] = 84344832;  // Enables segments A,B,D,E,G
+        SEVEN_SEG_OFF_VALS[display] = 33554432; // Disables segments F
         break;
     case 3:
-        SEVEN_SEG_SET_VALS[display] = 67600384; // Enables segments A,B,C,D,G
-        SEVEN_SEG_CLR_VALS[display] = 50331648; // Disables segments E,F
+        SEVEN_SEG_ON_VALS[display] = 67600384;  // Enables segments A,B,C,D,G
+        SEVEN_SEG_OFF_VALS[display] = 50331648; // Disables segments E,F
         break;
     case 4:
-        SEVEN_SEG_SET_VALS[display] = 100827136; // Enables segments B,C,F,G
-        SEVEN_SEG_CLR_VALS[display] = 17104896;  // Disables segments A,D,E
+        SEVEN_SEG_ON_VALS[display] = 100827136; // Enables segments B,C,F,G
+        SEVEN_SEG_OFF_VALS[display] = 17104896; // Disables segments A,D,E
         break;
     case 5:
-        SEVEN_SEG_SET_VALS[display] = 101023744; // Enables segments A,C,D,F,G
-        SEVEN_SEG_CLR_VALS[display] = 16908288;  // Disables segments B,E
+        SEVEN_SEG_ON_VALS[display] = 101023744; // Enables segments A,C,D,F,G
+        SEVEN_SEG_OFF_VALS[display] = 16908288; // Disables segments B,E
         break;
     case 6:
-        SEVEN_SEG_SET_VALS[display] = 84377600; // Enables segments A,B,C,D,E,G
-        SEVEN_SEG_CLR_VALS[display] = 33554432; // Disables segments F
+        SEVEN_SEG_ON_VALS[display] = 84377600;  // Enables segments A,B,C,D,E,G
+        SEVEN_SEG_OFF_VALS[display] = 33554432; // Disables segments F
         break;
     case 7:
-        SEVEN_SEG_SET_VALS[display] = 425984;    // Enables segments A,B,C
-        SEVEN_SEG_CLR_VALS[display] = 117506048; // Disables segments D,E,F,G,H
+        SEVEN_SEG_ON_VALS[display] = 425984;     // Enables segments A,B,C
+        SEVEN_SEG_OFF_VALS[display] = 117506048; // Disables segments D,E,F,G,H
         break;
     case 8:
-        SEVEN_SEG_SET_VALS[display] = 117932032; // Enables segments A,B,C,D,E,F,G
-        SEVEN_SEG_CLR_VALS[display] = 0;         // Disables no segments
+        SEVEN_SEG_ON_VALS[display] = 117932032; // Enables segments A,B,C,D,E,F,G
+        SEVEN_SEG_OFF_VALS[display] = 0;        // Disables no segments
         break;
     case 9:
-        SEVEN_SEG_SET_VALS[display] = 101154816; // Enables segments A,B,C,D,F,G
-        SEVEN_SEG_CLR_VALS[display] = 16777216;  // Disables segments E
+        SEVEN_SEG_ON_VALS[display] = 101154816; // Enables segments A,B,C,D,F,G
+        SEVEN_SEG_OFF_VALS[display] = 16777216; // Disables segments E
         break;
     default:
         break;
