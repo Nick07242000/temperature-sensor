@@ -10,16 +10,22 @@ void configPINS();
 void configADC();
 void configTMR();
 void configUART();
+void switchActiveDisplay();
 void setLED(uint8_t value);
 
 uint8_t TMR_INTER_COUNT = 0;
 uint8_t UART_INTER_COUNT = 0;
+uint8_t ENABLED_SEVEN_SEG = 0;
 uint32_t ADC_VALUE;
 
 int main()
 {
     configPRIO();
     configPINS();
+
+    LPC_GPIO0->FIOSET |= 255;      // Sets all pins to high by default
+    LPC_GPIO0->FIOSET |= (1 << 8); // Enables first display
+
     configADC();
     configTMR();
     configUART();
@@ -109,7 +115,8 @@ void configUART()
 void TIMER0_IRQHandler()
 {
     TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
-    // handle inter count and leds/adc/uart
+
+    switchActiveDisplay();
 
     TMR_INTER_COUNT++;
 
@@ -121,6 +128,7 @@ void TIMER0_IRQHandler()
     if (TMR_INTER_COUNT == 128)
     {
         UART_Send(LPC_UART0, ADC_VALUE, sizeof(ADC_VALUE), NONE_BLOCKING);
+        TMR_INTER_COUNT = 0;
     }
 
     return;
@@ -159,6 +167,35 @@ void UART2_IRQHandler()
     UART_INTER_COUNT++;
 
     return;
+}
+
+void switchActiveDisplay()
+{
+    switch (ENABLED_SEVEN_SEG)
+    {
+    case 3: // Resets counter and executes case 0
+        ENABLED_SEVEN_SEG = 0;
+    case 0: // Enables second display
+        LPC_GPIO0->FIOCLR |= (1 << 8);
+        LPC_GPIO0->FIOSET |= (1 << 9);
+        LPC_GPIO0->FIOCLR |= (1 << 10);
+        break;
+    case 1: // Enables third display
+        LPC_GPIO0->FIOCLR |= (1 << 8);
+        LPC_GPIO0->FIOCLR |= (1 << 9);
+        LPC_GPIO0->FIOSET |= (1 << 10);
+        break;
+    case 2: // Enables first display
+        LPC_GPIO0->FIOSET |= (1 << 8);
+        LPC_GPIO0->FIOCLR |= (1 << 9);
+        LPC_GPIO0->FIOCLR |= (1 << 10);
+        break;
+    default:
+        break;
+    }
+
+    ENABLED_SEVEN_SEG++;
+    return
 }
 
 void setLED(uint8_t value)
