@@ -106,7 +106,7 @@ void configTMR()
     mchCfg.ResetOnMatch = ENABLE;
     mchCfg.StopOnMatch = DISABLE;
     mchCfg.ExtMatchOutputType = TIM_EXTMATCH_NOTHING;
-    mchCfg.MatchValue = 660000;
+    mchCfg.MatchValue = 165000;
 
     TIM_Init(LPC_TIM0, TIM_TIMER_MODE, &tmrCfg);
     TIM_ConfigMatch(LPC_TIM0, &mchCfg);
