@@ -35,12 +35,10 @@ int main()
     configPRIO();
     configPINS();
     configADC();
-    configTMR();
     configUART();
+    configTMR();
 
-    while (1)
-    {
-    }
+    while (1) {}
 }
 
 void configPRIO()
@@ -89,8 +87,6 @@ void configADC()
     ADC_ChannelCmd(LPC_ADC, ADC_CHANNEL_0, ENABLE);
 
     NVIC_EnableIRQ(ADC_IRQn);
-
-    return;
 }
 
 void configTMR()
@@ -113,8 +109,6 @@ void configTMR()
     TIM_Cmd(LPC_TIM0, ENABLE);
 
     NVIC_EnableIRQ(TIMER0_IRQn);
-
-    return;
 }
 
 void configUART()
@@ -131,14 +125,10 @@ void configUART()
     UART_IntConfig((LPC_UART_TypeDef *)LPC_UART0, UART_INTCFG_RBR, ENABLE);
 
     NVIC_EnableIRQ(UART0_IRQn);
-
-    return;
 }
 
 void TIMER0_IRQHandler()
 {
-    TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
-
     switchActiveDisplay();
 
     tmr_inter_count++;
@@ -154,8 +144,8 @@ void TIMER0_IRQHandler()
         UART_Send((LPC_UART_TypeDef *)LPC_UART0, split_adc_value, 2, NONE_BLOCKING);
         tmr_inter_count = 0;
     }
-
-    return;
+    
+    TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
 }
 
 void ADC_IRQHandler()
@@ -194,7 +184,6 @@ void UART0_IRQHandler()
     }
 
     uart_inter_count++;
-    return;
 }
 
 void switchActiveDisplay()
@@ -256,8 +245,6 @@ void setLED(uint8_t value)
     default:
         break;
     }
-
-    return;
 }
 
 void loadSevenSegValue(uint8_t value, uint8_t display) // segs enabled by low
@@ -307,6 +294,4 @@ void loadSevenSegValue(uint8_t value, uint8_t display) // segs enabled by low
     default:
         break;
     }
-
-    return;
 }
