@@ -137,8 +137,6 @@ void configUART()
 
 void TIMER0_IRQHandler()
 {
-    TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
-
     switchActiveDisplay();
 
     tmr_inter_count++;
@@ -154,6 +152,8 @@ void TIMER0_IRQHandler()
         UART_Send((LPC_UART_TypeDef *)LPC_UART0, split_adc_value, 2, NONE_BLOCKING);
         tmr_inter_count = 0;
     }
+
+    TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
 
     return;
 }
