@@ -53,14 +53,18 @@ void configPRIO()
 void configPINS()
 {
     PINSEL_CFG_Type cfg;
-    cfg.Portnum = PINSEL_PORT_0;
+    cfg.Portnum = PINSEL_PORT_1;
     cfg.Funcnum = PINSEL_FUNC_0;
     cfg.Pinmode = PINSEL_PINMODE_PULLUP;
     cfg.OpenDrain = PINSEL_PINMODE_NORMAL;
 
-    uint8_t gpioPins[14] = {0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25, 26, 30};
+    cfg.Pinnum = PINSEL_PIN_30;
+    PINSEL_ConfigPin(&cfg);
 
-    for (int i = 0; i <= 14; i++)
+    cfg.Portnum = PINSEL_PORT_0;
+    uint8_t gpioPins[13] = {0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25, 26};
+
+    for (int i = 0; i <= 13; i++)
     {
         cfg.Pinnum = gpioPins[i];
         PINSEL_ConfigPin(&cfg);

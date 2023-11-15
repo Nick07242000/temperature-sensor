@@ -58,15 +58,11 @@ void configPINS()
     cfg.Pinmode = PINSEL_PINMODE_PULLUP;
     cfg.OpenDrain = PINSEL_PINMODE_NORMAL;
 
-<<<<<<< HEAD
-    uint8_t gpioPins[14] = {0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25, 26, 30};
-=======
     cfg.Pinnum = PINSEL_PIN_30;
     PINSEL_ConfigPin(&cfg);
 
     cfg.Portnum = PINSEL_PORT_0;
     uint8_t gpioPins[13] = {0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25, 26};
->>>>>>> 86aa446582ec8c0f877658874cb873d9a0fca701
 
     for (int i = 0; i <= 13; i++)
     {
