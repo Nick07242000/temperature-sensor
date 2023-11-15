@@ -1,3 +1,4 @@
+/* libs included */
 #include "lpc17xx.h"
 #include "lpc17xx_adc.h"
 #include "lpc17xx_pinsel.h"
@@ -5,6 +6,8 @@
 #include "lpc17xx_timer.h"
 #include "lpc17xx_uart.h"
 
+
+/* func declarations */
 void configPRIO();
 void configPINS();
 void configADC();
@@ -15,15 +18,21 @@ void setLED(uint8_t value);
 void setDisplayValue(uint8_t display);
 void loadSevenSegValue(uint8_t value, uint8_t display);
 
-uint8_t TMR_INTER_COUNT = 0;
-uint8_t UART_INTER_COUNT = 0;
-uint8_t ENABLED_SEVEN_SEG = 0;
 
-uint32_t ADC_VALUE;
+/* global variables declaration */
+uint8_t tmr_inter_count = 0;
+uint8_t uart_inter_count = 0;
+uint8_t enabled_seven_seg = 0;
 
-uin32_t SEVEN_SEG_ON_VALS[3] = [ 50823168, 1124564992, 50823168 ]; // all displays 0 by defauly
-uin32_t SEVEN_SEG_OFF_VALS[3] = [ 67108864, 67108864, 67108864 ];  // displays ordered as 1, 2, 3
+uint16_t adc_value;
 
+// all displays 0 by default
+uint32_t seven_seg_on_vals[3] = { 50823168, 1124564992, 50823168 };
+// displays ordered as 1, 2, 3
+uint32_t seven_seg_off_vals[3] = { 67108864, 67108864, 67108864 };
+
+
+/* func definitions */
 int main()
 {
     configPRIO();
@@ -32,16 +41,14 @@ int main()
     configTMR();
     configUART();
 
-    while (1)
-    {
-    }
+    while (1) {}
 }
 
 void configPRIO()
 {
     NVIC_SetPriority(UART0_IRQn, 0);
     NVIC_SetPriority(ADC_IRQn, 1);
-    NVIC_SetPriority(TMR0_IRQn, 2);
+    NVIC_SetPriority(TIMER0_IRQn, 2);
 }
 
 void configPINS()
@@ -52,24 +59,24 @@ void configPINS()
     cfg.Pinmode = PINSEL_PINMODE_PULLUP;
     cfg.OpenDrain = PINSEL_PINMODE_NORMAL;
 
-    uint8_t gpioPins[14] = [ 0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25, 26, 30 ];
+    uint8_t gpioPins[14] = { 0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25, 26, 30 };
 
     for (int i = 0; i <= 14; i++)
     {
         cfg.Pinnum = gpioPins[i];
-        PINSEL_ConfigPin(*cfg);
+        PINSEL_ConfigPin(&cfg);
     }
 
     cfg.Funcnum = PINSEL_FUNC_1;
 
     cfg.Pinnum = PINSEL_PIN_2;
-    PINSEL_ConfigPin(*cfg);
+    PINSEL_ConfigPin(&cfg);
     cfg.Pinnum = PINSEL_PIN_3;
-    PINSEL_ConfigPin(*cfg);
+    PINSEL_ConfigPin(&cfg);
 
     cfg.Pinnum = PINSEL_PIN_23;
     cfg.Pinmode = PINSEL_PINMODE_TRISTATE;
-    PINSEL_ConfigPin(*cfg);
+    PINSEL_ConfigPin(&cfg);
 }
 
 void configADC()
@@ -116,9 +123,9 @@ void configUART()
     UART_FIFOConfigStructInit(&fifoCfg);
 
     UART_Init(LPC_UART2, &uartCfg);
-    UART_FIFOConfig(LPC_UART0, &fifoCfg);
-    UART_TxCmd(LPC_UART0, ENABLE);
-    UART_IntConfig(LPC_UART0, UART_INTCFG_RBR, ENABLE);
+    UART_FIFOConfig((LPC_UART_TypeDef *)LPC_UART0, &fifoCfg);
+    UART_TxCmd((LPC_UART_TypeDef *)LPC_UART0, ENABLE);
+    UART_IntConfig((LPC_UART_TypeDef *)LPC_UART0, UART_INTCFG_RBR, ENABLE);
 
     NVIC_EnableIRQ(UART0_IRQn);
 
@@ -131,17 +138,18 @@ void TIMER0_IRQHandler()
 
     switchActiveDisplay();
 
-    TMR_INTER_COUNT++;
+    tmr_inter_count++;
 
-    if (TMR_INTER_COUNT == 64)
+    if (tmr_inter_count == 64)
     {
         ADC_StartCmd(LPC_ADC, ADC_START_NOW);
     }
 
-    if (TMR_INTER_COUNT == 128)
+    if (tmr_inter_count == 128)
     {
-        UART_Send(LPC_UART0, ADC_VALUE, sizeof(ADC_VALUE), NONE_BLOCKING);
-        TMR_INTER_COUNT = 0;
+        uint8_t split_adc_value[2] = {(uint8_t)(adc_value), (uint8_t)(adc_value >> 8)};
+        UART_Send((LPC_UART_TypeDef *)LPC_UART0, split_adc_value, 2, NONE_BLOCKING);
+        tmr_inter_count = 0;
     }
 
     return;
@@ -149,23 +157,23 @@ void TIMER0_IRQHandler()
 
 void ADC_IRQHandler()
 {
-    ADC_VALUE = ADC_ChannelGetData(LPC_ADC, ADC_CHANNEL_0);
+    adc_value = ADC_ChannelGetData(LPC_ADC, ADC_CHANNEL_0);
 }
 
 void UART0_IRQHandler()
 {
-    uint8_t value = UART_ReceiveByte(LPC_UART0);
+    uint8_t value = UART_ReceiveByte((LPC_UART_TypeDef *)LPC_UART0);
 
     if (value == 255)
     {
-        UART_INTER_COUNT = 0;
+        uart_inter_count = 0;
         return;
     }
 
-    switch (UART_INTER_COUNT)
+    switch (uart_inter_count)
     {
-    case 4: // Resets counter and executes case 0
-        UART_INTER_COUNT = 0;
+    case 4: // resets counter and executes case 0
+        uart_inter_count = 0;
     case 0:
         setLED(value);
         break;
@@ -182,29 +190,29 @@ void UART0_IRQHandler()
         break;
     }
 
-    UART_INTER_COUNT++;
+    uart_inter_count++;
     return;
 }
 
 void switchActiveDisplay()
 {
-    switch (ENABLED_SEVEN_SEG)
+    switch (enabled_seven_seg)
     {
-    case 3: // Resets counter and executes case 0
-        ENABLED_SEVEN_SEG = 0;
-    case 0: // Enables second display
+    case 3: // resets counter and executes case 0
+        enabled_seven_seg = 0;
+    case 0: // enables second display
         LPC_GPIO0->FIOCLR |= (1 << 9);
         LPC_GPIO0->FIOSET |= (1 << 8);
         LPC_GPIO0->FIOCLR |= (1 << 7);
         setDisplayValue(1);
         break;
-    case 1: // Enables third display
+    case 1: // enables third display
         LPC_GPIO0->FIOCLR |= (1 << 9);
         LPC_GPIO0->FIOCLR |= (1 << 8);
         LPC_GPIO0->FIOSET |= (1 << 7);
         setDisplayValue(2);
         break;
-    case 2: // Enables first display
+    case 2: // enables first display
         LPC_GPIO0->FIOSET |= (1 << 9);
         LPC_GPIO0->FIOCLR |= (1 << 8);
         LPC_GPIO0->FIOCLR |= (1 << 7);
@@ -214,14 +222,13 @@ void switchActiveDisplay()
         break;
     }
 
-    ENABLED_SEVEN_SEG++;
-    return
+    enabled_seven_seg++;
 }
 
 void setDisplayValue(uint8_t display)
 {
-    LPC_GPIO0->FIOCLR |= SEVEN_SEG_ON_VALS[display];
-    LPC_GPIO0->FIOSET |= SEVEN_SEG_OFF_VALS[display];
+    LPC_GPIO0->FIOCLR |= seven_seg_on_vals[display];
+    LPC_GPIO0->FIOSET |= seven_seg_off_vals[display];
 }
 
 void setLED(uint8_t value)
@@ -250,49 +257,49 @@ void setLED(uint8_t value)
     return;
 }
 
-void loadSevenSegValue(uint8_t value, uint8_t display) // Segments enabled by low
+void loadSevenSegValue(uint8_t value, uint8_t display) // segs enabled by low
 {
     switch (value)
     {
     case 0:
-        SEVEN_SEG_ON_VALS[display] = 50823168;  // Enables segments A,B,C,D,E,F
-        SEVEN_SEG_OFF_VALS[display] = 67108864; // Disables segments G
+        seven_seg_on_vals[display] = 50823168;  // enables segs A,B,C,D,E,F
+        seven_seg_off_vals[display] = 67108864; // disables segs G
         break;
     case 1:
-        SEVEN_SEG_ON_VALS[display] = 163840;     // Enables segments B,C
-        SEVEN_SEG_OFF_VALS[display] = 184844288; // Disables segments A,D,E,F,G
+        seven_seg_on_vals[display] = 163840;     // enables segs B,C
+        seven_seg_off_vals[display] = 184844288; // disables segs A,D,E,F,G
         break;
     case 2:
-        SEVEN_SEG_ON_VALS[display] = 84344832;  // Enables segments A,B,D,E,G
-        SEVEN_SEG_OFF_VALS[display] = 33554432; // Disables segments F
+        seven_seg_on_vals[display] = 84344832;  // enables segs A,B,D,E,G
+        seven_seg_off_vals[display] = 33554432; // disables segs F
         break;
     case 3:
-        SEVEN_SEG_ON_VALS[display] = 67600384;  // Enables segments A,B,C,D,G
-        SEVEN_SEG_OFF_VALS[display] = 50331648; // Disables segments E,F
+        seven_seg_on_vals[display] = 67600384;  // enables segs A,B,C,D,G
+        seven_seg_off_vals[display] = 50331648; // disables segs E,F
         break;
     case 4:
-        SEVEN_SEG_ON_VALS[display] = 100827136; // Enables segments B,C,F,G
-        SEVEN_SEG_OFF_VALS[display] = 17104896; // Disables segments A,D,E
+        seven_seg_on_vals[display] = 100827136; // enables segs B,C,F,G
+        seven_seg_off_vals[display] = 17104896; // disables segs A,D,E
         break;
     case 5:
-        SEVEN_SEG_ON_VALS[display] = 101023744; // Enables segments A,C,D,F,G
-        SEVEN_SEG_OFF_VALS[display] = 16908288; // Disables segments B,E
+        seven_seg_on_vals[display] = 101023744; // enables segs A,C,D,F,G
+        seven_seg_off_vals[display] = 16908288; // disables segs B,E
         break;
     case 6:
-        SEVEN_SEG_ON_VALS[display] = 84377600;  // Enables segments A,B,C,D,E,G
-        SEVEN_SEG_OFF_VALS[display] = 33554432; // Disables segments F
+        seven_seg_on_vals[display] = 84377600;  // enables segs A,B,C,D,E,G
+        seven_seg_off_vals[display] = 33554432; // disables segs F
         break;
     case 7:
-        SEVEN_SEG_ON_VALS[display] = 425984;     // Enables segments A,B,C
-        SEVEN_SEG_OFF_VALS[display] = 117506048; // Disables segments D,E,F,G,H
+        seven_seg_on_vals[display] = 425984;     // enables segs A,B,C
+        seven_seg_off_vals[display] = 117506048; // disables segs D,E,F,G,H
         break;
     case 8:
-        SEVEN_SEG_ON_VALS[display] = 117932032; // Enables segments A,B,C,D,E,F,G
-        SEVEN_SEG_OFF_VALS[display] = 0;        // Disables no segments
+        seven_seg_on_vals[display] = 117932032; // enables segs A,B,C,D,E,F,G
+        seven_seg_off_vals[display] = 0;        // disables no segs
         break;
     case 9:
-        SEVEN_SEG_ON_VALS[display] = 101154816; // Enables segments A,B,C,D,F,G
-        SEVEN_SEG_OFF_VALS[display] = 16777216; // Disables segments E
+        seven_seg_on_vals[display] = 101154816; // enables segs A,B,C,D,F,G
+        seven_seg_off_vals[display] = 16777216; // disables segs E
         break;
     default:
         break;
