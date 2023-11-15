@@ -24,7 +24,7 @@ uint8_t tmr_inter_count = 0;
 uint8_t uart_inter_count = 0;
 uint8_t enabled_seven_seg = 0;
 
-uint32_t adc_value;
+uint16_t adc_value;
 
 // all displays 0 by default
 uint32_t seven_seg_on_vals[3] = { 50823168, 1124564992, 50823168 };
@@ -147,7 +147,8 @@ void TIMER0_IRQHandler()
 
     if (tmr_inter_count == 128)
     {
-        UART_Send((LPC_UART_TypeDef *)LPC_UART0, adc_value, sizeof(adc_value), NONE_BLOCKING);
+        uint8_t split_adc_value[2] = {(uint8_t)(adc_value), (uint8_t)(adc_value >> 8)};
+        UART_Send((LPC_UART_TypeDef *)LPC_UART0, split_adc_value, 2, NONE_BLOCKING);
         tmr_inter_count = 0;
     }
 
