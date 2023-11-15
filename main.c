@@ -99,7 +99,7 @@ void configTMR()
     TIM_MATCHCFG_Type mchCfg;
 
     tmrCfg.PrescaleOption = TIM_PRESCALE_TICKVAL;
-    tmrCfg.PrescaleValue = 0;
+    tmrCfg.PrescaleValue = 1;
 
     mchCfg.MatchChannel = 0;
     mchCfg.IntOnMatch = ENABLE;
