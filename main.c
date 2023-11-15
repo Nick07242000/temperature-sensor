@@ -161,7 +161,6 @@ void TIMER0_IRQHandler()
 void ADC_IRQHandler()
 {
     adc_value = ADC_ChannelGetData(LPC_ADC, ADC_CHANNEL_0);
-    LPC_ADC->ADGDR &= LPC_ADC->ADGDR;
 }
 
 void UART0_IRQHandler()
