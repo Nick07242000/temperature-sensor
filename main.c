@@ -130,7 +130,7 @@ void configUART()
     UART_FIFO_CFG_Type fifoCfg;
     UART_FIFOConfigStructInit(&fifoCfg);
 
-    UART_Init(LPC_UART2, &uartCfg);
+    UART_Init((LPC_UART_TypeDef *)LPC_UART0, &uartCfg);
     UART_FIFOConfig((LPC_UART_TypeDef *)LPC_UART0, &fifoCfg);
     UART_TxCmd((LPC_UART_TypeDef *)LPC_UART0, ENABLE);
     UART_IntConfig((LPC_UART_TypeDef *)LPC_UART0, UART_INTCFG_RBR, ENABLE);
