@@ -125,7 +125,6 @@ void configUART()
 {
     UART_CFG_Type uartCfg;
     UART_ConfigStructInit(&uartCfg);
-    uartCfg.Baud_rate = 300;
     UART_Init((LPC_UART_TypeDef *)LPC_UART0, &uartCfg);
 
     UART_FIFO_CFG_Type fifoCfg;
