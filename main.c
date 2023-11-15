@@ -25,9 +25,9 @@ uint8_t enabled_seven_seg = 0;
 uint16_t adc_value;
 
 // all displays 0 by default
-uint32_t seven_seg_on_vals[3] = {50823168, 1124564992, 50823168};
 // displays ordered as 1, 2, 3
-uint32_t seven_seg_off_vals[3] = {67108864, 67108864, 67108864};
+uint32_t port_0_on_vals[3] = {50823168, 50823168, 50823168};
+uint8_t port_0_off_vals[3] = {67108864, 67108864, 67108864};
 
 /* func definitions */
 int main()
@@ -76,6 +76,9 @@ void configPINS()
     PINSEL_ConfigPin(&cfg);
     cfg.Pinnum = PINSEL_PIN_3;
     PINSEL_ConfigPin(&cfg);
+
+    GPIO_SetDir(1, 1 << 22, 1);
+    GPIO_SetDir(0, 0b111000001111000001111000011, 1);
 }
 
 void configADC()
@@ -200,21 +203,24 @@ void switchActiveDisplay()
     case 3: // resets counter and executes case 0
         enabled_seven_seg = 0;
     case 0: // enables second display
-        LPC_GPIO0->FIOCLR |= (1 << 9);
-        LPC_GPIO0->FIOSET |= (1 << 8);
-        LPC_GPIO0->FIOCLR |= (1 << 7);
+        LPC_GPIO0->FIOCLR = (1 << 9);
+        LPC_GPIO0->FIOSET = (1 << 8);
+        LPC_GPIO0->FIOCLR = (1 << 7);
+        LPC_GPIO1->FIOCLR = (1 << 30); // enables dot
         setDisplayValue(1);
         break;
     case 1: // enables third display
-        LPC_GPIO0->FIOCLR |= (1 << 9);
-        LPC_GPIO0->FIOCLR |= (1 << 8);
-        LPC_GPIO0->FIOSET |= (1 << 7);
+        LPC_GPIO0->FIOCLR = (1 << 9);
+        LPC_GPIO0->FIOCLR = (1 << 8);
+        LPC_GPIO0->FIOSET = (1 << 7);
+        LPC_GPIO1->FIOSET = (1 << 30); // disables dot
         setDisplayValue(2);
         break;
     case 2: // enables first display
-        LPC_GPIO0->FIOSET |= (1 << 9);
-        LPC_GPIO0->FIOCLR |= (1 << 8);
-        LPC_GPIO0->FIOCLR |= (1 << 7);
+        LPC_GPIO0->FIOSET = (1 << 9);
+        LPC_GPIO0->FIOCLR = (1 << 8);
+        LPC_GPIO0->FIOCLR = (1 << 7);
+        LPC_GPIO1->FIOSET = (1 << 30); // disables dot
         setDisplayValue(0);
         break;
     default:
@@ -226,8 +232,8 @@ void switchActiveDisplay()
 
 void setDisplayValue(uint8_t display)
 {
-    LPC_GPIO0->FIOCLR |= seven_seg_on_vals[display];
-    LPC_GPIO0->FIOSET |= seven_seg_off_vals[display];
+    LPC_GPIO0->FIOCLR = port_0_on_vals[display];
+    LPC_GPIO0->FIOSET = port_0_off_vals[display];
 }
 
 void setLED(uint8_t value)
@@ -235,19 +241,19 @@ void setLED(uint8_t value)
     switch (value)
     {
     case 1:
-        LPC_GPIO0->FIOSET |= (1 << 11);
-        LPC_GPIO0->FIOCLR |= (1 << 12);
-        LPC_GPIO0->FIOCLR |= (1 << 13);
+        LPC_GPIO0->FIOSET = (1 << 11);
+        LPC_GPIO0->FIOCLR = (1 << 12);
+        LPC_GPIO0->FIOCLR = (1 << 13);
         break;
     case 2:
-        LPC_GPIO0->FIOCLR |= (1 << 11);
-        LPC_GPIO0->FIOSET |= (1 << 12);
-        LPC_GPIO0->FIOCLR |= (1 << 13);
+        LPC_GPIO0->FIOCLR = (1 << 11);
+        LPC_GPIO0->FIOSET = (1 << 12);
+        LPC_GPIO0->FIOCLR = (1 << 13);
         break;
     case 4:
-        LPC_GPIO0->FIOCLR |= (1 << 11);
-        LPC_GPIO0->FIOCLR |= (1 << 12);
-        LPC_GPIO0->FIOSET |= (1 << 13);
+        LPC_GPIO0->FIOCLR = (1 << 11);
+        LPC_GPIO0->FIOCLR = (1 << 12);
+        LPC_GPIO0->FIOSET = (1 << 13);
         break;
     default:
         break;
@@ -259,44 +265,44 @@ void loadSevenSegValue(uint8_t value, uint8_t display) // segs enabled by low
     switch (value)
     {
     case 0:
-        seven_seg_on_vals[display] = 50823168;  // enables segs A,B,C,D,E,F
-        seven_seg_off_vals[display] = 67108864; // disables segs G
+        port_0_on_vals[display] = 50823168;  // enables segs A,B,C,D,E,F
+        port_0_off_vals[display] = 67108864; // disables segs G
         break;
     case 1:
-        seven_seg_on_vals[display] = 163840;     // enables segs B,C
-        seven_seg_off_vals[display] = 184844288; // disables segs A,D,E,F,G
+        port_0_on_vals[display] = 163840;     // enables segs B,C
+        port_0_off_vals[display] = 117768192; // disables segs A,D,E,F,G
         break;
     case 2:
-        seven_seg_on_vals[display] = 84344832;  // enables segs A,B,D,E,G
-        seven_seg_off_vals[display] = 33587200; // disables segs C,F
+        port_0_on_vals[display] = 84344832;  // enables segs A,B,D,E,G
+        port_0_off_vals[display] = 33587200; // disables segs C,F
         break;
     case 3:
-        seven_seg_on_vals[display] = 67600384;  // enables segs A,B,C,D,G
-        seven_seg_off_vals[display] = 50331648; // disables segs E,F
+        port_0_on_vals[display] = 67600384;  // enables segs A,B,C,D,G
+        port_0_off_vals[display] = 50331648; // disables segs E,F
         break;
     case 4:
-        seven_seg_on_vals[display] = 100827136; // enables segs B,C,F,G
-        seven_seg_off_vals[display] = 17104896; // disables segs A,D,E
+        port_0_on_vals[display] = 100827136; // enables segs B,C,F,G
+        port_0_off_vals[display] = 17104896; // disables segs A,D,E
         break;
     case 5:
-        seven_seg_on_vals[display] = 101023744; // enables segs A,C,D,F,G
-        seven_seg_off_vals[display] = 16908288; // disables segs B,E
+        port_0_on_vals[display] = 101023744; // enables segs A,C,D,F,G
+        port_0_off_vals[display] = 16908288; // disables segs B,E
         break;
     case 6:
-        seven_seg_on_vals[display] = 84377600;  // enables segs A,B,C,D,E,G
-        seven_seg_off_vals[display] = 33554432; // disables segs F
+        port_0_on_vals[display] = 84377600;  // enables segs A,B,C,D,E,G
+        port_0_off_vals[display] = 33554432; // disables segs F
         break;
     case 7:
-        seven_seg_on_vals[display] = 425984;     // enables segs A,B,C
-        seven_seg_off_vals[display] = 117506048; // disables segs D,E,F,G,H
+        port_0_on_vals[display] = 425984;     // enables segs A,B,C
+        port_0_off_vals[display] = 117506048; // disables segs D,E,F,G,H
         break;
     case 8:
-        seven_seg_on_vals[display] = 117932032; // enables segs A,B,C,D,E,F,G
-        seven_seg_off_vals[display] = 0;        // disables no segs
+        port_0_on_vals[display] = 117932032; // enables segs A,B,C,D,E,F,G
+        port_0_off_vals[display] = 0;        // disables no segs
         break;
     case 9:
-        seven_seg_on_vals[display] = 101154816; // enables segs A,B,C,D,F,G
-        seven_seg_off_vals[display] = 16777216; // disables segs E
+        port_0_on_vals[display] = 101154816; // enables segs A,B,C,D,F,G
+        port_0_off_vals[display] = 16777216; // disables segs E
         break;
     default:
         break;
