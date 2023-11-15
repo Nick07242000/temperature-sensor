@@ -274,7 +274,7 @@ void loadSevenSegValue(uint8_t value, uint8_t display) // segs enabled by low
         break;
     case 2:
         seven_seg_on_vals[display] = 84344832;  // enables segs A,B,D,E,G
-        seven_seg_off_vals[display] = 33554432; // disables segs F
+        seven_seg_off_vals[display] = 33587200; // disables segs C,F
         break;
     case 3:
         seven_seg_on_vals[display] = 67600384;  // enables segs A,B,C,D,G
