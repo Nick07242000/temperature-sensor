@@ -77,7 +77,7 @@ void configPINS()
     cfg.Pinnum = PINSEL_PIN_3;
     PINSEL_ConfigPin(&cfg);
 
-    GPIO_SetDir(1, 1 << 22, 1);
+    GPIO_SetDir(1, 1 << 30, 1);
     GPIO_SetDir(0, 0b111000001111000001111000011, 1);
 }
 
