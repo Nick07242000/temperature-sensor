@@ -74,17 +74,22 @@ void configPINS()
     PINSEL_ConfigPin(&cfg);
     cfg.Pinnum = PINSEL_PIN_3;
     PINSEL_ConfigPin(&cfg);
-
-    cfg.Pinnum = PINSEL_PIN_23;
-    cfg.Pinmode = PINSEL_PINMODE_TRISTATE;
-    PINSEL_ConfigPin(&cfg);
 }
 
 void configADC()
 {
     ADC_Init(LPC_ADC, 200000);
-    ADC_IntConfig(LPC_ADC, ADC_ADINTEN0, ENABLE);
-    ADC_ChannelCmd(LPC_ADC, ADC_CHANNEL_0, ENABLE);
+
+    // set pin for input
+    PINSEL_CFG_Type pin_0_23;
+    pin_0_23.Portnum = PINSEL_PORT_0;
+    pin_0_23.Pinnum = PINSEL_PIN_23;
+    pin_0_23.Funcnum = PINSEL_FUNC_1;
+    pin_0_23.Pinmode = PINSEL_PINMODE_TRISTATE;
+    pin_0_23.OpenDrain = PINSEL_PINMODE_NORMAL;
+    PINSEL_ConfigPin(&pin_0_23);
+
+    ADC_ChannelCmd(LPC_ADC, 0, ENABLE);
 
     NVIC_EnableIRQ(ADC_IRQn);
 }
@@ -144,13 +149,15 @@ void TIMER0_IRQHandler()
         UART_Send((LPC_UART_TypeDef *)LPC_UART0, split_adc_value, 2, NONE_BLOCKING);
         tmr_inter_count = 0;
     }
-    
+
     TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
 }
 
 void ADC_IRQHandler()
 {
-    adc_value = ADC_ChannelGetData(LPC_ADC, ADC_CHANNEL_0);
+    adc_value = ADC_GlobalGetData(LPC_ADC);
+    // clear flag...
+    LPC_ADC->ADSTAT &= ~(0x1<<16);
 }
 
 void UART0_IRQHandler()
