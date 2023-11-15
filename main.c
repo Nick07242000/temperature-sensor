@@ -126,12 +126,12 @@ void configUART()
     UART_CFG_Type uartCfg;
     UART_ConfigStructInit(&uartCfg);
     uartCfg.Baud_rate = 300;
+    UART_Init((LPC_UART_TypeDef *)LPC_UART0, &uartCfg);
 
     UART_FIFO_CFG_Type fifoCfg;
     UART_FIFOConfigStructInit(&fifoCfg);
-
-    UART_Init((LPC_UART_TypeDef *)LPC_UART0, &uartCfg);
     UART_FIFOConfig((LPC_UART_TypeDef *)LPC_UART0, &fifoCfg);
+
     UART_TxCmd((LPC_UART_TypeDef *)LPC_UART0, ENABLE);
     UART_IntConfig((LPC_UART_TypeDef *)LPC_UART0, UART_INTCFG_RBR, ENABLE);
 
@@ -152,7 +152,7 @@ void TIMER0_IRQHandler()
     if (tmr_inter_count == 128)
     {
         uint8_t split_adc_value[2] = {(uint8_t)(adc_value), (uint8_t)(adc_value >> 8)};
-        UART_Send((LPC_UART_TypeDef *)LPC_UART0, split_adc_value, 2, NONE_BLOCKING);
+        UART_Send((LPC_UART_TypeDef *)LPC_UART0, split_adc_value, 2, BLOCKING);
         tmr_inter_count = 0;
     }
 
