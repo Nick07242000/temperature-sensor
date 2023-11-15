@@ -125,6 +125,7 @@ void configUART()
 {
     UART_CFG_Type uartCfg;
     UART_ConfigStructInit(&uartCfg);
+    uartCfg.Baud_rate = 300;
     UART_Init((LPC_UART_TypeDef *)LPC_UART0, &uartCfg);
 
     UART_FIFO_CFG_Type fifoCfg;
@@ -160,7 +161,7 @@ void TIMER0_IRQHandler()
 
 void ADC_IRQHandler()
 {
-    adc_value = (ADC_GlobalGetData(LPC_ADC) >> 4) & 0xFFF;
+    adc_value = ((ADC_GlobalGetData(LPC_ADC) >> 4) & 0xFFF);
 }
 
 void UART0_IRQHandler()
@@ -175,8 +176,6 @@ void UART0_IRQHandler()
 
     switch (uart_inter_count)
     {
-    case 4: // resets counter and executes case 0
-        uart_inter_count = 0;
     case 0:
         setLED(value);
         break;
@@ -188,9 +187,6 @@ void UART0_IRQHandler()
         break;
     case 3:
         loadSevenSegValue(value, 2);
-        break;
-    default:
-        break;
     }
 
     uart_inter_count++;
@@ -241,19 +237,19 @@ void setLED(uint8_t value)
     switch (value)
     {
     case 1:
-        LPC_GPIO0->FIOSET = (1 << 11);
-        LPC_GPIO0->FIOCLR = (1 << 12);
-        LPC_GPIO0->FIOCLR = (1 << 13);
+        LPC_GPIO0->FIOSET = (1 << 1);
+        LPC_GPIO0->FIOCLR = (1 << 0);
+        LPC_GPIO0->FIOCLR = (1 << 6);
         break;
     case 2:
-        LPC_GPIO0->FIOCLR = (1 << 11);
-        LPC_GPIO0->FIOSET = (1 << 12);
-        LPC_GPIO0->FIOCLR = (1 << 13);
+        LPC_GPIO0->FIOCLR = (1 << 1);
+        LPC_GPIO0->FIOSET = (1 << 0);
+        LPC_GPIO0->FIOCLR = (1 << 6);
         break;
     case 4:
-        LPC_GPIO0->FIOCLR = (1 << 11);
-        LPC_GPIO0->FIOCLR = (1 << 12);
-        LPC_GPIO0->FIOSET = (1 << 13);
+        LPC_GPIO0->FIOCLR = (1 << 1);
+        LPC_GPIO0->FIOCLR = (1 << 0);
+        LPC_GPIO0->FIOSET = (1 << 6);
         break;
     default:
         break;
