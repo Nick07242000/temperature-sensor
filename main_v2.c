@@ -25,9 +25,9 @@ uint8_t enabled_seven_seg = 0;
 uint16_t adc_value;
 
 // all displays 0 by default
-uint32_t seven_seg_on_vals[3] = {50823168, 1124564992, 50823168};
+uint32_t seven_seg_on_vals[3] = {50823168, 2198307071, 50823168};
 // displays ordered as 1, 2, 3
-uint32_t seven_seg_off_vals[3] = {67108864, 67108864, 67108864};
+uint32_t seven_seg_off_vals[3] = {1073741824, 1073741824, 1073741824};
 
 /* func definitions */
 int main()
@@ -272,44 +272,44 @@ void loadSevenSegValue(uint8_t value, uint8_t display) // segs enabled by low
     switch (value)
     {
     case 0:
-        seven_seg_on_vals[display] = 50823168;  // enables segs A,B,C,D,E,F
-        seven_seg_off_vals[display] = 67108864; // disables segs G
+        seven_seg_on_vals[display] = 50823168;    // enables segs A,B,C,D,E,F
+        seven_seg_off_vals[display] = 1073741824; // disables segs G
         break;
     case 1:
-        seven_seg_on_vals[display] = 163840;     // enables segs B,C
-        seven_seg_off_vals[display] = 184844288; // disables segs A,D,E,F,G
+        seven_seg_on_vals[display] = 163840;      // enables segs B,C
+        seven_seg_off_vals[display] = 1124401152; // disables segs A,D,E,F,G
         break;
     case 2:
-        seven_seg_on_vals[display] = 84344832;  // enables segs A,B,D,E,G
-        seven_seg_off_vals[display] = 33554432; // disables segs F
+        seven_seg_on_vals[display] = 1090977792; // enables segs A,B,D,E,G
+        seven_seg_off_vals[display] = 33587200;  // disables segs C,F
         break;
     case 3:
-        seven_seg_on_vals[display] = 67600384;  // enables segs A,B,C,D,G
-        seven_seg_off_vals[display] = 50331648; // disables segs E,F
+        seven_seg_on_vals[display] = 1074233344; // enables segs A,B,C,D,G
+        seven_seg_off_vals[display] = 50331648;  // disables segs E,F
         break;
     case 4:
-        seven_seg_on_vals[display] = 100827136; // enables segs B,C,F,G
-        seven_seg_off_vals[display] = 17104896; // disables segs A,D,E
+        seven_seg_on_vals[display] = 1107460096; // enables segs B,C,F,G
+        seven_seg_off_vals[display] = 17104896;  // disables segs A,D,E
         break;
     case 5:
-        seven_seg_on_vals[display] = 101023744; // enables segs A,C,D,F,G
-        seven_seg_off_vals[display] = 16908288; // disables segs B,E
+        seven_seg_on_vals[display] = 1107656704; // enables segs A,C,D,F,G
+        seven_seg_off_vals[display] = 16908288;  // disables segs B,E
         break;
     case 6:
-        seven_seg_on_vals[display] = 84377600;  // enables segs A,B,C,D,E,G
-        seven_seg_off_vals[display] = 33554432; // disables segs F
+        seven_seg_on_vals[display] = 1091010560; // enables segs A,B,C,D,E,G
+        seven_seg_off_vals[display] = 33554432;  // disables segs F
         break;
     case 7:
         seven_seg_on_vals[display] = 425984;     // enables segs A,B,C
         seven_seg_off_vals[display] = 117506048; // disables segs D,E,F,G,H
         break;
     case 8:
-        seven_seg_on_vals[display] = 117932032; // enables segs A,B,C,D,E,F,G
-        seven_seg_off_vals[display] = 0;        // disables no segs
+        seven_seg_on_vals[display] = 1124564992; // enables segs A,B,C,D,E,F,G
+        seven_seg_off_vals[display] = 0;         // disables no segs
         break;
     case 9:
-        seven_seg_on_vals[display] = 101154816; // enables segs A,B,C,D,F,G
-        seven_seg_off_vals[display] = 16777216; // disables segs E
+        seven_seg_on_vals[display] = 1107787776; // enables segs A,B,C,D,F,G
+        seven_seg_off_vals[display] = 16777216;  // disables segs E
         break;
     default:
         break;
