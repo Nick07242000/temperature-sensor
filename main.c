@@ -230,8 +230,8 @@ void switchActiveDisplay()
 
 void setDisplayValue(uint8_t display)
 {
-    LPC_GPIO0->FIOCLR |= seven_seg_on_vals[display];
-    LPC_GPIO0->FIOSET |= seven_seg_off_vals[display];
+    LPC_GPIO0->FIOSET |= seven_seg_on_vals[display];
+    LPC_GPIO0->FIOCLR |= seven_seg_off_vals[display];
 }
 
 void setLED(uint8_t value)
