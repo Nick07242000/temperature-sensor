@@ -6,7 +6,6 @@
 #include "lpc17xx_timer.h"
 #include "lpc17xx_uart.h"
 
-
 /* func declarations */
 void configPRIO();
 void configPINS();
@@ -18,7 +17,6 @@ void setLED(uint8_t value);
 void setDisplayValue(uint8_t display);
 void loadSevenSegValue(uint8_t value, uint8_t display);
 
-
 /* global variables declaration */
 uint8_t tmr_inter_count = 0;
 uint8_t uart_inter_count = 0;
@@ -27,10 +25,9 @@ uint8_t enabled_seven_seg = 0;
 uint16_t adc_value;
 
 // all displays 0 by default
-uint32_t seven_seg_on_vals[3] = { 50823168, 1124564992, 50823168 };
+uint32_t seven_seg_on_vals[3] = {50823168, 1124564992, 50823168};
 // displays ordered as 1, 2, 3
-uint32_t seven_seg_off_vals[3] = { 67108864, 67108864, 67108864 };
-
+uint32_t seven_seg_off_vals[3] = {67108864, 67108864, 67108864};
 
 /* func definitions */
 int main()
@@ -41,7 +38,9 @@ int main()
     configTMR();
     configUART();
 
-    while (1) {}
+    while (1)
+    {
+    }
 }
 
 void configPRIO()
@@ -59,7 +58,7 @@ void configPINS()
     cfg.Pinmode = PINSEL_PINMODE_PULLUP;
     cfg.OpenDrain = PINSEL_PINMODE_NORMAL;
 
-    uint8_t gpioPins[14] = { 0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25, 26, 30 };
+    uint8_t gpioPins[14] = {0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25, 26, 30};
 
     for (int i = 0; i <= 14; i++)
     {
