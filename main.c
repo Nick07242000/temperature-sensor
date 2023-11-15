@@ -204,21 +204,21 @@ void switchActiveDisplay()
     case 3: // resets counter and executes case 0
         enabled_seven_seg = 0;
     case 0: // enables second display
-        LPC_GPIO0->FIOCLR |= (1 << 9);
-        LPC_GPIO0->FIOSET |= (1 << 8);
-        LPC_GPIO0->FIOCLR |= (1 << 7);
+        LPC_GPIO0->FIOSET |= (1 << 9);
+        LPC_GPIO0->FIOCLR |= (1 << 8);
+        LPC_GPIO0->FIOSET |= (1 << 7);
         setDisplayValue(1);
         break;
     case 1: // enables third display
-        LPC_GPIO0->FIOCLR |= (1 << 9);
-        LPC_GPIO0->FIOCLR |= (1 << 8);
-        LPC_GPIO0->FIOSET |= (1 << 7);
+        LPC_GPIO0->FIOSET |= (1 << 9);
+        LPC_GPIO0->FIOSET |= (1 << 8);
+        LPC_GPIO0->FIOCLR |= (1 << 7);
         setDisplayValue(2);
         break;
     case 2: // enables first display
-        LPC_GPIO0->FIOSET |= (1 << 9);
-        LPC_GPIO0->FIOCLR |= (1 << 8);
-        LPC_GPIO0->FIOCLR |= (1 << 7);
+        LPC_GPIO0->FIOCLR |= (1 << 9);
+        LPC_GPIO0->FIOSET |= (1 << 8);
+        LPC_GPIO0->FIOSET |= (1 << 7);
         setDisplayValue(0);
         break;
     default:
