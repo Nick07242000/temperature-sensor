@@ -98,7 +98,7 @@ void configTMR()
     TIM_TIMERCFG_Type tmrCfg;
     TIM_MATCHCFG_Type mchCfg;
 
-    tmrCfg.PrescaleOption = TIM_PRESCALE_USVAL;
+    tmrCfg.PrescaleOption = TIM_PRESCALE_TICKVAL;
     tmrCfg.PrescaleValue = 0;
 
     mchCfg.MatchChannel = 0;
@@ -161,6 +161,7 @@ void TIMER0_IRQHandler()
 void ADC_IRQHandler()
 {
     adc_value = ADC_ChannelGetData(LPC_ADC, ADC_CHANNEL_0);
+    LPC_ADC->ADGDR &= LPC_ADC->ADGDR;
 }
 
 void UART0_IRQHandler()
