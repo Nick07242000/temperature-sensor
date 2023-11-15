@@ -20,7 +20,7 @@ void loadSevenSegValue(uint8_t value, uint8_t display);
 
 
 /* global variables declaration */
-uint8_t tmr_inter_count = 0;
+uint16_t tmr_inter_count = 0;
 uint8_t uart_inter_count = 0;
 uint8_t enabled_seven_seg = 0;
 
@@ -48,13 +48,14 @@ int main(void) {
 
 void configPRIO(void) {
   NVIC_SetPriority(UART0_IRQn, 0);
-  NVIC_SetPriority(ADC_IRQn, 1);
-  NVIC_SetPriority(TIMER0_IRQn, 2);
+  NVIC_SetPriority(TIMER0_IRQn, 1);
+  NVIC_SetPriority(ADC_IRQn, 2);
 }
 
 
 void configPINS(void) {
   PINSEL_CFG_Type cfg;
+  // lone from port 1 first
   cfg.Portnum = PINSEL_PORT_1;
   cfg.Funcnum = PINSEL_FUNC_0;
   cfg.Pinmode = PINSEL_PINMODE_PULLUP;
@@ -63,6 +64,7 @@ void configPINS(void) {
   cfg.Pinnum = PINSEL_PIN_30;
   PINSEL_ConfigPin(&cfg);
 
+  // all from port 0
   cfg.Portnum = PINSEL_PORT_0;
   uint8_t gpioPins[13] = {0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25, 26};
 
@@ -71,15 +73,16 @@ void configPINS(void) {
     PINSEL_ConfigPin(&cfg);
   }
 
+  // UART pins
   cfg.Funcnum = PINSEL_FUNC_1;
-
   cfg.Pinnum = PINSEL_PIN_2;
   PINSEL_ConfigPin(&cfg);
   cfg.Pinnum = PINSEL_PIN_3;
   PINSEL_ConfigPin(&cfg);
 
+  // pins direction setting
   GPIO_SetDir(1, 1 << 30, 1);
-  GPIO_SetDir(0, 0b111000001111000001111000011, 1);
+  GPIO_SetDir(0, 0b111010001111000001111000011, 1);
 }
 
 
@@ -182,7 +185,8 @@ void UART0_IRQHandler(void) {
     case 2:
       loadSevenSegValue(value, 1);
       break;
-    case 3:
+    default:
+      // 3
       loadSevenSegValue(value, 2);
   }
 
@@ -208,13 +212,12 @@ void switchActiveDisplay(void) {
       LPC_GPIO1->FIOSET = (1 << 30); // disables dot
       setDisplayValue(2);
       break;
-    case 2: // enables first display
+    default: // enables first display
+      // 2
       LPC_GPIO0->FIOSET = (1 << 9);
       LPC_GPIO0->FIOCLR = (1 << 8);
       LPC_GPIO0->FIOCLR = (1 << 7);
-      LPC_GPIO1->FIOSET = (1 << 30); // disables dot
       setDisplayValue(0);
-      break;
   }
 
   enabled_seven_seg++;
@@ -239,13 +242,11 @@ void setLED(uint8_t value) {
       LPC_GPIO0->FIOSET = (1 << 0);
       LPC_GPIO0->FIOCLR = (1 << 6);
       break;
-    case 4:
+    default:
+      // 4
       LPC_GPIO0->FIOCLR = (1 << 1);
       LPC_GPIO0->FIOCLR = (1 << 0);
       LPC_GPIO0->FIOSET = (1 << 6);
-      break;
-    default:
-      break;
   }
 }
 
@@ -278,12 +279,12 @@ void loadSevenSegValue(uint8_t value, uint8_t display) {
       port_0_off_vals[display] = 16908288; // disables segs B,E
       break;
     case 6:
-      port_0_on_vals[display] = 84377600;  // enables segs A,B,C,D,E,G
-      port_0_off_vals[display] = 33554432; // disables segs F
+      port_0_on_vals[display] = 117800960;  // enables segs A,C,D,E,F,G
+      port_0_off_vals[display] = 131072; // disables segs B
       break;
     case 7:
       port_0_on_vals[display] = 425984;     // enables segs A,B,C
-      port_0_off_vals[display] = 117506048; // disables segs D,E,F,G,H
+      port_0_off_vals[display] = 117506048; // disables segs D,E,F,G
       break;
     case 8:
       port_0_on_vals[display] = 117932032; // enables segs A,B,C,D,E,F,G
@@ -293,6 +294,5 @@ void loadSevenSegValue(uint8_t value, uint8_t display) {
       // 9
       port_0_on_vals[display] = 101154816; // enables segs A,B,C,D,F,G
       port_0_off_vals[display] = 16777216; // disables segs E
-      break;
   }
 }
