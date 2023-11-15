@@ -27,7 +27,7 @@ uint16_t adc_value;
 // all displays 0 by default
 // displays ordered as 1, 2, 3
 uint32_t port_0_on_vals[3] = {50823168, 50823168, 50823168};
-uint8_t port_0_off_vals[3] = {67108864, 67108864, 67108864};
+uint32_t port_0_off_vals[3] = {67108864, 67108864, 67108864};
 
 /* func definitions */
 int main()
