@@ -156,8 +156,6 @@ void TIMER0_IRQHandler()
 void ADC_IRQHandler()
 {
     adc_value = ADC_GlobalGetData(LPC_ADC);
-    // clear flag...
-    LPC_ADC->ADSTAT &= ~(0x1<<16);
 }
 
 void UART0_IRQHandler()
