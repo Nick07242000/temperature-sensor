@@ -60,11 +60,13 @@ void configPINS()
 
     cfg.Pinnum = PINSEL_PIN_30;
     PINSEL_ConfigPin(&cfg);
+    cfg.Pinnum = PINSEL_PIN_31;
+    PINSEL_ConfigPin(&cfg);
 
     cfg.Portnum = PINSEL_PORT_0;
-    uint8_t gpioPins[13] = {0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25, 26};
+    uint8_t gpioPins[12] = {0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25};
 
-    for (int i = 0; i <= 13; i++)
+    for (int i = 0; i <= 12; i++)
     {
         cfg.Pinnum = gpioPins[i];
         PINSEL_ConfigPin(&cfg);
@@ -79,6 +81,11 @@ void configPINS()
 
     cfg.Pinnum = PINSEL_PIN_23;
     cfg.Pinmode = PINSEL_PINMODE_TRISTATE;
+    PINSEL_ConfigPin(&cfg);
+
+    cfg.Pinnum = PINSEL_PIN_26;
+    cfg.Funcnum = PINSEL_FUNC_2;
+    cfg.Pinmode = PINSEL_PINMODE_PULLDOWN;
     PINSEL_ConfigPin(&cfg);
 }
 
