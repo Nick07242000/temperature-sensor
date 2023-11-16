@@ -280,8 +280,8 @@ void setDisplayValue(uint8_t display) {
   LPC_GPIO0->FIOCLR = port_0_on_vals[display];
   LPC_GPIO0->FIOSET = port_0_off_vals[display];
   // handle port 1 bit
-  LPC_GPIO1->FIOSET = (port_1_on_vals[display] << 30);
-  LPC_GPIO1->FIOCLR = (port_1_off_vals[display] << 30);
+  LPC_GPIO1->FIOCLR = (port_1_on_vals[display] << 30);
+  LPC_GPIO1->FIOSET = (port_1_off_vals[display] << 30);
 }
 
 
