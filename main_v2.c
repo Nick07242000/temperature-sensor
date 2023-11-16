@@ -165,7 +165,6 @@ void configUART(void) {
 
 void configDAC(void) {
   DAC_CONVERTER_CFG_Type cfg;
-  cfg.CNT_ENA = SET;
   cfg.DMA_ENA = SET;
 
   DAC_Init(LPC_DAC);
@@ -297,14 +296,14 @@ void setLED(uint8_t value) {
       LPC_GPIO0->FIOCLR = (1 << 1);
       LPC_GPIO0->FIOSET = (1 << 0);
       LPC_GPIO0->FIOCLR = (1 << 6);
-      DAC_SetDMATimeOut(LPC_DAC, 10000);
+      DAC_SetBias(LPC_DAC, 1);
       GPDMA_ChannelCmd(0, ENABLE);
       break;
     default:// 4
       LPC_GPIO0->FIOCLR = (1 << 1);
       LPC_GPIO0->FIOCLR = (1 << 0);
       LPC_GPIO0->FIOSET = (1 << 6);
-      DAC_SetDMATimeOut(LPC_DAC, 5000);
+      DAC_SetBias(LPC_DAC, 0);
       GPDMA_ChannelCmd(0, ENABLE);
   }
 }
