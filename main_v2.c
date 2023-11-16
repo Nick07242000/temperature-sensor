@@ -380,7 +380,7 @@ void loadSignal(void) {
   uint32_t *memory = (uint32_t *)0x2007E000;
 
   for (int i = 0; i < 180; ++i) {
-    uint32_t sample = 512 + 512 * sin(i);
+    uint32_t sample = 512 + 511 * sin(i);
     *memory = sample;
     memory++;
   }
