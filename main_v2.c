@@ -128,7 +128,7 @@ void configTMR(void) {
   TIM_TIMERCFG_Type tmrCfg;
   TIM_MATCHCFG_Type mchCfg;
 
-  tmrCfg.PrescaleOption = TIM_PRESCALE_USVAL;
+  tmrCfg.PrescaleOption = TIM_PRESCALE_TICKVAL;
   tmrCfg.PrescaleValue = 1;
 
   mchCfg.MatchChannel = 0;
