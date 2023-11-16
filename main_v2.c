@@ -16,17 +16,14 @@ void configPINS();
 void configADC();
 void configTMR();
 void configUART();
-void configDAC();
 void configDMA();
 void switchActiveDisplay();
 void setLED(uint8_t value);
 void setDisplayValue(uint8_t display);
 void loadSevenSegValue(uint8_t value, uint8_t display);
-void loadSignal();
 
 
 /* global variables declaration */
-uint8_t tmr_inter_count = 0;
 uint8_t uart_inter_count = 0;
 uint8_t enabled_seven_seg = 0;
 
@@ -43,12 +40,10 @@ uint8_t port_1_off_vals[3] = {1, 1, 1};
 
 /* func definitions */
 int main(void) {
-  loadSignal();
   configPRIO();
   configPINS();
   configADC();
   configUART();
-  configDAC();
   configDMA();
   configTMR();
 
@@ -61,7 +56,6 @@ int main(void) {
 void configPRIO(void) {
   NVIC_SetPriority(UART0_IRQn, 0);
   NVIC_SetPriority(TIMER0_IRQn, 1);
-  NVIC_SetPriority(ADC_IRQn, 2);
 }
 
 
@@ -82,7 +76,7 @@ void configPINS(void) {
   cfg.Portnum = PINSEL_PORT_0;
   uint8_t gpioPins[12] = {0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25};
 
-  for (int i = 0; i <= 12; i++) {
+  for (int i = 0; i < 12; i++) {
     cfg.Pinnum = gpioPins[i];
     PINSEL_ConfigPin(&cfg);
   }
@@ -94,12 +88,6 @@ void configPINS(void) {
   cfg.Pinnum = PINSEL_PIN_3;
   PINSEL_ConfigPin(&cfg);
 
-  // DAC Pins
-  cfg.Pinnum = PINSEL_PIN_26;
-  cfg.Funcnum = PINSEL_FUNC_2;
-  cfg.Pinmode = PINSEL_PINMODE_PULLDOWN;
-  PINSEL_ConfigPin(&cfg);
-
   // pins direction setting
   GPIO_SetDir(1, 3 << 30, 1);
   GPIO_SetDir(0, 0b11010001111000001111000011, 1);
@@ -107,7 +95,7 @@ void configPINS(void) {
 
 
 void configADC(void) {
-  ADC_Init(LPC_ADC, 200000);
+  ADC_Init(LPC_ADC, 200);
 
   // set pin for input
   PINSEL_CFG_Type pin_0_23;
@@ -118,9 +106,8 @@ void configADC(void) {
   pin_0_23.OpenDrain = PINSEL_PINMODE_NORMAL;
   PINSEL_ConfigPin(&pin_0_23);
 
+  ADC_BurstCmd(LPC_ADC, ENABLE);
   ADC_ChannelCmd(LPC_ADC, 0, ENABLE);
-
-  NVIC_EnableIRQ(ADC_IRQn);
 }
 
 
@@ -154,6 +141,7 @@ void configUART(void) {
 
   UART_FIFO_CFG_Type fifoCfg;
   UART_FIFOConfigStructInit(&fifoCfg);
+  fifoCfg.FIFO_DMAMode = ENABLE;
   UART_FIFOConfig((LPC_UART_TypeDef *)LPC_UART0, &fifoCfg);
 
   UART_TxCmd((LPC_UART_TypeDef *)LPC_UART0, ENABLE);
@@ -163,52 +151,21 @@ void configUART(void) {
 }
 
 
-void configDAC(void) {
-  DAC_CONVERTER_CFG_Type cfg;
-  cfg.DMA_ENA = SET;
-
-  DAC_Init(LPC_DAC);
-  DAC_ConfigDAConverterControl(LPC_DAC, &cfg);
-}
-
-
 void configDMA(void) {
-  GPDMA_LLI_Type lli;
-  lli.SrcAddr= (uint32_t)0x2007E000;
-  lli.DstAddr= (uint32_t)&(LPC_DAC->DACR);
-  lli.NextLLI= (uint32_t)&lli;
-  lli.Control= 180
-      | (2<<18)  //source width 32 bit
-      | (2<<21)  //dest width 32 bit
-      | (1<<26); //source increment
-
   GPDMA_Init();
 
   GPDMA_Channel_CFG_Type cfg;
   cfg.ChannelNum = 0;
-  cfg.TransferSize = 180; // sin signals only need 180 different values
-  cfg.SrcMemAddr = 0x2007E000; //SRAM bank 0 where signal is stored
-  cfg.TransferType = GPDMA_TRANSFERTYPE_M2P;
-  cfg.DstConn = GPDMA_CONN_DAC;
-  cfg.DMALLI = (uint32_t)&lli;
+  cfg.TransferSize = 1;
+  cfg.TransferType = GPDMA_TRANSFERTYPE_P2P;
+  cfg.SrcConn = GPDMA_CONN_ADC;
+  cfg.DstConn = GPDMA_CONN_UART0_Tx_MAT0_0;
   GPDMA_Setup(&cfg);
 }
 
 
 void TIMER0_IRQHandler(void) {
   switchActiveDisplay();
-
-  tmr_inter_count++;
-
-  if (tmr_inter_count == 64) {
-    ADC_StartCmd(LPC_ADC, ADC_START_NOW);
-  }
-
-  if (tmr_inter_count == 128) {
-    uint8_t split_adc_value[2] = {(uint8_t)(adc_value), (uint8_t)(adc_value >> 8)};
-    UART_Send((LPC_UART_TypeDef *)LPC_UART0, split_adc_value, 2, BLOCKING);
-    tmr_inter_count = 0;
-  }
 
   TIM_ClearIntPending(LPC_TIM0, TIM_MR0_INT);
 }
@@ -296,14 +253,14 @@ void setLED(uint8_t value) {
       LPC_GPIO0->FIOCLR = (1 << 1);
       LPC_GPIO0->FIOSET = (1 << 0);
       LPC_GPIO0->FIOCLR = (1 << 6);
-      DAC_SetBias(LPC_DAC, 1);
+      DAC_SetDMATimeOut(LPC_DAC, 10000);
       GPDMA_ChannelCmd(0, ENABLE);
       break;
     default:// 4
       LPC_GPIO0->FIOCLR = (1 << 1);
       LPC_GPIO0->FIOCLR = (1 << 0);
       LPC_GPIO0->FIOSET = (1 << 6);
-      DAC_SetBias(LPC_DAC, 0);
+      DAC_SetDMATimeOut(LPC_DAC, 5000);
       GPDMA_ChannelCmd(0, ENABLE);
   }
 }
@@ -371,16 +328,5 @@ void loadSevenSegValue(uint8_t value, uint8_t display) {
       port_0_off_vals[display] = 16777216;  // disables segs E
       port_1_on_vals[display] = 1;          // segment G enabled
       port_1_off_vals[display] = 0;         // segment G enabled
-  }
-}
-
-
-void loadSignal(void) {
-  uint32_t *memory = (uint32_t *)0x2007E000;
-
-  for (int i = 0; i < 180; ++i) {
-    uint32_t sample = 512 + 511 * sin(i);
-    *memory = sample;
-    memory++;
   }
 }
