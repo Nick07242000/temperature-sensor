@@ -5,6 +5,9 @@
 #include "lpc17xx_gpio.h"
 #include "lpc17xx_timer.h"
 #include "lpc17xx_uart.h"
+#include "lpc17xx_gpdma.h"
+#include "lpc17xx_dac.h"
+#include <math.h>
 
 
 /* func declarations */
@@ -161,35 +164,35 @@ void configUART(void) {
 
 
 void configDAC(void) {
-	DAC_CONVERTER_CFG_Type cfg;
-	cfg.CNT_ENA = SET;
-	cfg.DMA_ENA = SET;
+  DAC_CONVERTER_CFG_Type cfg;
+  cfg.CNT_ENA = SET;
+  cfg.DMA_ENA = SET;
 
   DAC_Init(LPC_DAC);
-	DAC_ConfigDAConverterControl(LPC_DAC, &cfg);
+  DAC_ConfigDAConverterControl(LPC_DAC, &cfg);
 }
 
 
 void configDMA(void) {
   GPDMA_LLI_Type lli;
-	lli.SrcAddr= (uint32_t)0x2007E000;
-	lli.DstAddr= (uint32_t)&(LPC_DAC->DACR);
-	lli.NextLLI= (uint32_t)&lli;
-	lli.Control= DMA_SIZE
-			| (2<<18)  //source width 32 bit
-			| (2<<21)  //dest width 32 bit
-			| (1<<26); //source increment
+  lli.SrcAddr= (uint32_t)0x2007E000;
+  lli.DstAddr= (uint32_t)&(LPC_DAC->DACR);
+  lli.NextLLI= (uint32_t)&lli;
+  lli.Control= 180
+      | (2<<18)  //source width 32 bit
+      | (2<<21)  //dest width 32 bit
+      | (1<<26); //source increment
 
-	GPDMA_Init();
+  GPDMA_Init();
 
   GPDMA_Channel_CFG_Type cfg;
-	cfg.ChannelNum = 0;
-	cfg.TransferSize = 180; // sin signals only need 180 different values
-	cfg.SrcMemAddr = 0x2007E000; //SRAM bank 0 where signal is stored
-	cfg.TransferType = GPDMA_TRANSFERTYPE_M2P;
-	cfg.DstConn = GPDMA_CONN_DAC;
-	cfg.DMALLI = (uint32_t)&lli;
-	GPDMA_Setup(&cfg);
+  cfg.ChannelNum = 0;
+  cfg.TransferSize = 180; // sin signals only need 180 different values
+  cfg.SrcMemAddr = 0x2007E000; //SRAM bank 0 where signal is stored
+  cfg.TransferType = GPDMA_TRANSFERTYPE_M2P;
+  cfg.DstConn = GPDMA_CONN_DAC;
+  cfg.DMALLI = (uint32_t)&lli;
+  GPDMA_Setup(&cfg);
 }
 
 
@@ -294,14 +297,14 @@ void setLED(uint8_t value) {
       LPC_GPIO0->FIOCLR = (1 << 1);
       LPC_GPIO0->FIOSET = (1 << 0);
       LPC_GPIO0->FIOCLR = (1 << 6);
-	    DAC_SetDMATimeOut(LPC_DAC, 10000);
+      DAC_SetDMATimeOut(LPC_DAC, 10000);
       GPDMA_ChannelCmd(0, ENABLE);
       break;
     default:// 4
       LPC_GPIO0->FIOCLR = (1 << 1);
       LPC_GPIO0->FIOCLR = (1 << 0);
       LPC_GPIO0->FIOSET = (1 << 6);
-	    DAC_SetDMATimeOut(LPC_DAC, 5000);
+      DAC_SetDMATimeOut(LPC_DAC, 5000);
       GPDMA_ChannelCmd(0, ENABLE);
   }
 }
@@ -374,7 +377,7 @@ void loadSevenSegValue(uint8_t value, uint8_t display) {
 
 
 void loadSignal(void) {
-  uint32_t *memory = (int32_t *)0x2007E000;
+  uint32_t *memory = (uint32_t *)0x2007E000;
 
   for (int i = 0; i < 180; ++i) {
     uint32_t sample = 512 + 512 * sin(i);
