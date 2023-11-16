@@ -85,7 +85,7 @@ void configPINS(void) {
   cfg.Portnum = PINSEL_PORT_0;
   uint8_t gpioPins[12] = {0, 1, 6, 7, 8, 9, 15, 16, 17, 18, 24, 25};
 
-  for (int i = 0; i <= 12; i++) {
+  for (int i = 0; i < 12; i++) {
     cfg.Pinnum = gpioPins[i];
     PINSEL_ConfigPin(&cfg);
   }
