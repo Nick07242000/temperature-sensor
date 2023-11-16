@@ -11,18 +11,19 @@
 
 
 /* func declarations */
-void configPRIO();
-void configPINS();
-void configADC();
-void configTMR();
-void configUART();
-void configDAC();
-void configDMA();
-void switchActiveDisplay();
+void configPRIO(void);
+void configPINS(void);
+void configADC(void);
+void configTMR(void);
+void configUART(void);
+void configDAC(void);
+void configDMA(void);
+void switchActiveDisplay(void);
 void setLED(uint8_t value);
 void setDisplayValue(uint8_t display);
 void loadSevenSegValue(uint8_t value, uint8_t display);
-void loadSignal();
+void loadWave(void);
+void triggerWave(uint16_t rate);
 
 
 /* global variables declaration */
@@ -40,10 +41,12 @@ uint32_t port_0_off_vals[3] = {0, 0, 0};
 uint8_t port_1_on_vals[3] = {0, 0, 0};
 uint8_t port_1_off_vals[3] = {1, 1, 1};
 
+uint32_t wave[180] = {0};
+
 
 /* func definitions */
 int main(void) {
-  loadSignal();
+  loadWave();
   configPRIO();
   configPINS();
   configADC();
@@ -94,15 +97,9 @@ void configPINS(void) {
   cfg.Pinnum = PINSEL_PIN_3;
   PINSEL_ConfigPin(&cfg);
 
-  // DAC Pins
-  cfg.Pinnum = PINSEL_PIN_26;
-  cfg.Funcnum = PINSEL_FUNC_2;
-  cfg.Pinmode = PINSEL_PINMODE_PULLDOWN;
-  PINSEL_ConfigPin(&cfg);
-
   // pins direction setting
   GPIO_SetDir(1, 3 << 30, 1);
-  GPIO_SetDir(0, 0b11010001111000001111000011, 1);
+  GPIO_SetDir(0, 0b111010001111000001111000011, 1);
 }
 
 
@@ -164,31 +161,38 @@ void configUART(void) {
 
 
 void configDAC(void) {
-  DAC_CONVERTER_CFG_Type cfg;
-  cfg.CNT_ENA = SET;
-  cfg.DMA_ENA = SET;
-
+  // initialize DAC
   DAC_Init(LPC_DAC);
-  DAC_ConfigDAConverterControl(LPC_DAC, &cfg);
+  // config pin P0.26
+  PINSEL_CFG_Type pin_0_26;
+  pin_0_26.Portnum = PINSEL_PORT_0;
+  pin_0_26.Pinnum = PINSEL_PIN_26;
+  pin_0_26.Funcnum = PINSEL_FUNC_2;
+  pin_0_26.Pinmode = PINSEL_PINMODE_PULLUP;
+  pin_0_26.OpenDrain = PINSEL_PINMODE_NORMAL;
+  PINSEL_ConfigPin(&pin_0_26);
+  // output 0 at the beginning
+  DAC_UpdateValue(LPC_DAC, 0);
 }
 
 
 void configDMA(void) {
+  // initialize GPDMA
+  GPDMA_Init();
+  // set up linked list
   GPDMA_LLI_Type lli;
-  lli.SrcAddr= (uint32_t)0x2007E000;
-  lli.DstAddr= (uint32_t)&(LPC_DAC->DACR);
+  lli.SrcAddr= (uint32_t)wave;
+  lli.DstAddr= (uint32_t)(&(LPC_DAC->DACR));
   lli.NextLLI= (uint32_t)&lli;
   lli.Control= 180
       | (2<<18)  //source width 32 bit
       | (2<<21)  //dest width 32 bit
       | (1<<26); //source increment
-
-  GPDMA_Init();
-
+  // set up GPDMA
   GPDMA_Channel_CFG_Type cfg;
   cfg.ChannelNum = 0;
   cfg.TransferSize = 180; // sin signals only need 180 different values
-  cfg.SrcMemAddr = 0x2007E000; //SRAM bank 0 where signal is stored
+  cfg.SrcMemAddr = (uint32_t)wave;
   cfg.TransferType = GPDMA_TRANSFERTYPE_M2P;
   cfg.DstConn = GPDMA_CONN_DAC;
   cfg.DMALLI = (uint32_t)&lli;
@@ -291,21 +295,21 @@ void setLED(uint8_t value) {
       LPC_GPIO0->FIOSET = (1 << 1);
       LPC_GPIO0->FIOCLR = (1 << 0);
       LPC_GPIO0->FIOCLR = (1 << 6);
-      GPDMA_ChannelCmd(0, DISABLE);
+      triggerWave(0);
       break;
     case 2:
       LPC_GPIO0->FIOCLR = (1 << 1);
       LPC_GPIO0->FIOSET = (1 << 0);
       LPC_GPIO0->FIOCLR = (1 << 6);
-      DAC_SetDMATimeOut(LPC_DAC, 10000);
-      GPDMA_ChannelCmd(0, ENABLE);
+      // wave of 2 KHz
+      triggerWave(77);
       break;
-    default:// 4
+    default: // 4
       LPC_GPIO0->FIOCLR = (1 << 1);
       LPC_GPIO0->FIOCLR = (1 << 0);
       LPC_GPIO0->FIOSET = (1 << 6);
-      DAC_SetDMATimeOut(LPC_DAC, 5000);
-      GPDMA_ChannelCmd(0, ENABLE);
+      // wave of 5 KHz
+      triggerWave(50);
   }
 }
 
@@ -376,12 +380,47 @@ void loadSevenSegValue(uint8_t value, uint8_t display) {
 }
 
 
-void loadSignal(void) {
-  uint32_t *memory = (uint32_t *)0x2007E000;
+void loadWave(void) {
+  uint32_t sample;
+  for(int i = 0; i < 180; i++) {
+    sample = 512 + (512 * sin(i));
+    // evade 1024 error value
+    sample = (sample == 1024 ? 1023 : sample);
+    wave[i] = (sample << 6);
+  }
+}
 
-  for (int i = 0; i < 180; ++i) {
-    uint32_t sample = 512 + 512 * sin(i);
-    *memory = sample;
-    memory++;
+
+void triggerWave(uint16_t rate) {
+  if(rate != 0) {
+
+    // reset DAC setting regarding GPDMA
+    DAC_CONVERTER_CFG_Type dac_gpdma;
+    dac_gpdma.DBLBUF_ENA = 0;
+    dac_gpdma.CNT_ENA = 0;
+    dac_gpdma.DMA_ENA = 0;
+    DAC_ConfigDAConverterControl(LPC_DAC, &dac_gpdma);
+
+    // GPDMA related config. Clock for the internal DAC timer is 25 MHz by default
+    DAC_SetDMATimeOut(LPC_DAC, rate);
+    dac_gpdma.CNT_ENA = 1;
+    dac_gpdma.DMA_ENA = 1;
+    DAC_ConfigDAConverterControl(LPC_DAC, &dac_gpdma);
+
+    // enable GPDMA channel 0
+    GPDMA_ChannelCmd(0, ENABLE);
+
+  } else {
+
+    // disable GPDMA channel 0
+    GPDMA_ChannelCmd(0, DISABLE);
+
+    // reset DAC setting regarding GPDMA
+    DAC_CONVERTER_CFG_Type dac_gpdma;
+    dac_gpdma.DBLBUF_ENA = 0;
+    dac_gpdma.CNT_ENA = 0;
+    dac_gpdma.DMA_ENA = 0;
+    DAC_ConfigDAConverterControl(LPC_DAC, &dac_gpdma);
+
   }
 }
