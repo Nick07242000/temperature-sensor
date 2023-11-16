@@ -29,7 +29,10 @@ uint16_t adc_value;
 // all displays 0 by default
 // displays ordered as 1, 2, 3
 uint32_t port_0_on_vals[3] = {50823168, 50823168, 50823168};
-uint32_t port_0_off_vals[3] = {67108864, 67108864, 67108864};
+uint32_t port_0_off_vals[3] = {0, 0, 0};
+// two bits on port 1: segment g and point
+uint8_t port_1_on_vals[3] = {0, 0, 0};
+uint8_t port_1_off_vals[3] = {1, 1, 1};
 
 
 /* func definitions */
@@ -209,12 +212,14 @@ void switchActiveDisplay(void) {
       LPC_GPIO0->FIOCLR |= (1 << 9);
       LPC_GPIO0->FIOSET |= (1 << 8);
       LPC_GPIO0->FIOCLR |= (1 << 7);
+      LPC_GPIO1->FIOCLR = (1 << 31); // enables dot
       setDisplayValue(1);
       break;
     case 1: // enables third display
       LPC_GPIO0->FIOCLR |= (1 << 9);
       LPC_GPIO0->FIOCLR |= (1 << 8);
       LPC_GPIO0->FIOSET |= (1 << 7);
+      LPC_GPIO1->FIOSET = (1 << 31); // disables dot
       setDisplayValue(2);
       break;
     default: // 2: enables first display
@@ -229,8 +234,12 @@ void switchActiveDisplay(void) {
 
 
 void setDisplayValue(uint8_t display) {
+  // handle port 0 bits
   LPC_GPIO0->FIOCLR = port_0_on_vals[display];
   LPC_GPIO0->FIOSET = port_0_off_vals[display];
+  // handle port 1 bit
+  LPC_GPIO1->FIOSET = (port_1_on_vals[display] << 30);
+  LPC_GPIO1->FIOCLR = (port_1_off_vals[display] << 30);
 }
 
 
@@ -259,43 +268,63 @@ void setLED(uint8_t value) {
 void loadSevenSegValue(uint8_t value, uint8_t display) {
   switch (value) {
     case 0:
-      seven_seg_on_vals[display] = 50823168;    // enables segs A,B,C,D,E,F
-      seven_seg_off_vals[display] = 1073741824; // disables segs G
+      port_0_on_vals[display] = 50823168;   // enables segs A,B,C,D,E,F
+      port_0_off_vals[display] = 0;         // disables no segs
+      port_1_on_vals[display] = 0;          // segment G disabled
+      port_1_off_vals[display] = 1;         // segment G disabled
       break;
     case 1:
-      seven_seg_on_vals[display] = 163840;      // enables segs B,C
-      seven_seg_off_vals[display] = 1124401152; // disables segs A,D,E,F,G
+      port_0_on_vals[display] = 163840;     // enables segs B,C
+      port_0_off_vals[display] = 50659328;  // disables segs A,D,E,F
+      port_1_on_vals[display] = 0;          // segment G disabled
+      port_1_off_vals[display] = 1;         // segment G disabled
       break;
     case 2:
-      seven_seg_on_vals[display] = 1090977792; // enables segs A,B,D,E,G
-      seven_seg_off_vals[display] = 33587200;  // disables segs C,F
+      port_0_on_vals[display] = 17235968;   // enables segs A,B,D,E
+      port_0_off_vals[display] = 33587200;  // disables segs C,F
+      port_1_on_vals[display] = 1;          // segment G enabled
+      port_1_off_vals[display] = 0;         // segment G enabled
       break;
     case 3:
-      seven_seg_on_vals[display] = 1074233344; // enables segs A,B,C,D,G
-      seven_seg_off_vals[display] = 50331648;  // disables segs E,F
+      port_0_on_vals[display] = 491520;     // enables segs A,B,C,D
+      port_0_off_vals[display] = 50331648;  // disables segs E,F
+      port_1_on_vals[display] = 1;          // segment G enabled
+      port_1_off_vals[display] = 0;         // segment G enabled
       break;
     case 4:
-      seven_seg_on_vals[display] = 1107460096; // enables segs B,C,F,G
-      seven_seg_off_vals[display] = 17104896;  // disables segs A,D,E
+      port_0_on_vals[display] = 33718272;   // enables segs B,C,F
+      port_0_off_vals[display] = 17104896;  // disables segs A,D,E
+      port_1_on_vals[display] = 1;          // segment G enabled
+      port_1_off_vals[display] = 0;         // segment G enabled
       break;
     case 5:
-      seven_seg_on_vals[display] = 1107656704; // enables segs A,C,D,F,G
-      seven_seg_off_vals[display] = 16908288;  // disables segs B,E
+      port_0_on_vals[display] = 33914880;   // enables segs A,C,D,F
+      port_0_off_vals[display] = 16908288;  // disables segs B,E
+      port_1_on_vals[display] = 1;          // segment G enabled
+      port_1_off_vals[display] = 0;         // segment G enabled
       break;
     case 6:
-      seven_seg_on_vals[display] = 1091010560; // enables segs A,B,C,D,E,G
-      seven_seg_off_vals[display] = 33554432;  // disables segs F
+      port_0_on_vals[display] = 17268736;   // enables segs A,B,C,D,E
+      port_0_off_vals[display] = 33554432;  // disables segs F
+      port_1_on_vals[display] = 1;          // segment G enabled
+      port_1_off_vals[display] = 0;         // segment G enabled
       break;
     case 7:
-      seven_seg_on_vals[display] = 425984;      // enables segs A,B,C
-      seven_seg_off_vals[display] = 1124139008; // disables segs D,E,F,G,H
+      port_0_on_vals[display] = 425984;     // enables segs A,B,C
+      port_0_off_vals[display] = 50397184;  // disables segs D,E,F
+      port_1_on_vals[display] = 0;          // segment G disabled
+      port_1_off_vals[display] = 1;         // segment G disabled
       break;
     case 8:
-      seven_seg_on_vals[display] = 1124564992; // enables segs A,B,C,D,E,F,G
-      seven_seg_off_vals[display] = 0;         // disables no segs
+      port_0_on_vals[display] = 50823168;   // enables segs A,B,C,D,E,F
+      port_0_off_vals[display] = 0;         // disables no segs
+      port_1_on_vals[display] = 1;          // segment G enabled
+      port_1_off_vals[display] = 0;         // segment G enabled
       break;
     default: // 9
-      seven_seg_on_vals[display] = 1107787776; // enables segs A,B,C,D,F,G
-      seven_seg_off_vals[display] = 16777216;  // disables segs E
+      port_0_on_vals[display] = 34045952;   // enables segs A,B,C,D,F
+      port_0_off_vals[display] = 16777216;  // disables segs E
+      port_1_on_vals[display] = 1;          // segment G enabled
+      port_1_off_vals[display] = 0;         // segment G enabled
   }
 }
