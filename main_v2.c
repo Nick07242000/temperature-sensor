@@ -18,7 +18,7 @@ void switchActiveDisplay();
 void setLED(uint8_t value);
 void setDisplayValue(uint8_t display);
 void loadSevenSegValue(uint8_t value, uint8_t display);
-void trigger_memory_transaction(uint16_t value);
+void trigger_memory_transaction(uint16_t* value);
 
 
 /* global variables declaration */
@@ -192,16 +192,16 @@ void UART0_IRQHandler(void) {
     case 1:
       loadSevenSegValue(value, 0);
       // MSB
-      bcd_last_value = 0 + (8 << ((uint16_t)value));
+      bcd_last_value = (uint16_t)value;
       break;
     case 2:
       loadSevenSegValue(value, 1);
-      bcd_last_value |=  (4 << ((uint16_t)value));
+      bcd_last_value |=  (((uint16_t)value) << 4);
       break;
     default: // 3
       loadSevenSegValue(value, 2);
       // LSB
-      bcd_last_value |= (uint16_t)value;
+      bcd_last_value |= (((uint16_t)value) << 8);
       // make space for last value
       for(int8_t i = 9; i > 0; i--) {
         last_10_values[i] = last_10_values[i - 1];
